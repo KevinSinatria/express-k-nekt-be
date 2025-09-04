@@ -1,10 +1,10 @@
-import e from "express";
+import express from "express";
 import { helloWorld } from "../controllers/index.js";
-import AuthRoutes from "./auth/index.js";
+import authRoutes from "./auth/index.js";
 
-const router = e.Router();
+const router = express.Router();
 
-router.get("/", helloWorld);
-router.get("/auth", AuthRoutes);
+// router.get("/", helloWorld);
+router.use("/auth", authRoutes);
 
 export default router;

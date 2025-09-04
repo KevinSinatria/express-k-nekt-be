@@ -1,6 +1,6 @@
-import e from "express";
+import express from "express";
 
-const router = e.Router();
+const router = express.Router();
 
 router.get("/login", (req, res) => {
 	res.status(200).json({
