@@ -1,6 +1,5 @@
 generator client {
    provider = "prisma-client-js"
-   //   output   = "../generated/prisma"
 }
 
 datasource db {
@@ -28,14 +27,14 @@ model classes {
 
 model detail_students {
    id         Int          @id @default(autoincrement()) @db.UnsignedInt
-   nis        Int          @db.UnsignedInt
+   nis        Int          @unique @db.UnsignedInt
    id_year    Int          @db.UnsignedSmallInt
    id_class   Int          @db.UnsignedSmallInt
    created_at DateTime?    @db.Timestamp(0)
    updated_at DateTime?    @db.Timestamp(0)
-   students   students     @relation(fields: [nis], references: [nis], onDelete: NoAction, onUpdate: NoAction, map: "detail_students_ibfk_1")
-   classes    classes      @relation(fields: [id_class], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "detail_students_id_class_foreign")
-   years      years        @relation(fields: [id_year], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "detail_students_id_year_foreign")
+   students   students     @relation(fields: [nis], references: [nis], onUpdate: Cascade, onDelete: Cascade, map: "detail_students_ibfk_1")
+   classes    classes      @relation(fields: [id_class], references: [id], onUpdate: Cascade, onDelete: Cascade, map: "detail_students_id_class_foreign")
+   years      years        @relation(fields: [id_year], references: [id], onUpdate: Cascade, onDelete: Cascade, map: "detail_students_id_year_foreign")
    violations violations[]
 
    @@unique([nis, id_year, id_class], map: "nis_2")
@@ -116,8 +115,8 @@ model students {
    nis             Int               @id @default(autoincrement()) @db.UnsignedInt
    name            String            @db.VarChar(100)
    point           Int               @default(0)
-   created_at      DateTime?         @db.Timestamp(0)
-   updated_at      DateTime?         @db.Timestamp(0)
+   created_at      DateTime?         @default(now()) @db.Timestamp(0)
+   updated_at      DateTime?         @default(now()) @db.Timestamp(0)
    detail_students detail_students[]
 }
 
@@ -151,7 +150,7 @@ model violation_type {
    point              Int                @db.SmallInt
    punishment         String             @db.VarChar(50)
    category_id        Int                @db.SmallInt
-   violation_category violation_category @relation(fields: [category_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "violation_type_ibfk_1")
+   violation_category violation_category @relation(fields: [category_id], references: [id], onUpdate: Restrict, map: "violation_type_ibfk_1")
    violations         violations[]
 
    @@index([category_id], map: "category_id")
@@ -163,11 +162,11 @@ model violations {
    type_id         Int             @db.SmallInt
    teacher_id      Int
    implemented     Boolean
-   created_at      DateTime        @default(now())
-   updated_at      DateTime        @updatedAt
-   detail_students detail_students @relation(fields: [student_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "violations_ibfk_1")
-   violation_type  violation_type  @relation(fields: [type_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "violations_ibfk_2")
-   users           users           @relation(fields: [teacher_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "violations_ibfk_3")
+   created_at      DateTime?       @default(now()) @db.Timestamp(0)
+   updated_at      DateTime?       @default(now()) @updatedAt @db.Timestamp(0)
+   detail_students detail_students @relation(fields: [student_id], references: [id], onUpdate: Restrict, map: "violations_ibfk_1")
+   violation_type  violation_type  @relation(fields: [type_id], references: [id], onUpdate: Restrict, map: "violations_ibfk_2")
+   users           users           @relation(fields: [teacher_id], references: [id], onUpdate: Restrict, map: "violations_ibfk_3")
 
    @@index([student_id], map: "student_id")
    @@index([teacher_id], map: "teacher_id")
