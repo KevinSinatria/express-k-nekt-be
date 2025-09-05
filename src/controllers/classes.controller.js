@@ -48,13 +48,13 @@ export const getClassById = async (req, res) => {
 export const createClass = async (req, res) => {
     const { class: className } = req.body;
     try {
-        const exsistingClass = await prisma.classes.findFirst({
+        const existingClass = await prisma.classes.findFirst({
             where: {
                 class: className,
             },
         });
 
-        if (exsistingClass) {
+        if (existingClass) {
             return res.status(409).json({
                 success: false,
                 message: "Class already exists",
