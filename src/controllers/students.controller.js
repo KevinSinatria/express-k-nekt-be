@@ -86,10 +86,10 @@ export const createStudent = async (req, res) => {
 		console.error(error);
 
 		if (error.code === "P2002") {
-			return res.status(400).json({
+			return res.status(409).json({
 				success: false,
 				message: "NIS already exists",
-				code: 400,
+				code: 409,
 			});
 		}
 
