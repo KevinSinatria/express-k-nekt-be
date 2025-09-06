@@ -82,7 +82,9 @@ export const createViolationType = async (req, res) => {
     try {
         const existingViolationType = await prisma.violation_type.findFirst({
             where: {
-                name: name,
+                name: {
+                    contains: name,
+                },
             },
         });
 
