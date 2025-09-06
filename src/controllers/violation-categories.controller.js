@@ -11,12 +11,14 @@ export const getAllViolationCategories = async (req, res) => {
         res.status(200).json({
             success: true,
             message: "Violation categories retrivied successfully",
+            code: 200,
             data: violationCategories,
         });
     } catch (error) {
         res.status(500).json({
             success: false,
             message: "Failed to retrieve violation categories",
+            code: 500,
             error: error.message,
         });
     }
@@ -36,18 +38,21 @@ export const getViolationCategoryById = async (req, res) => {
             res.status(404).json({
                 success: false,
                 message: "Violation category not found",
+                code: 404,
             });
         }
 
         res.status(200).json({
             success: true,
             message: "Violation category retrivied successfully",
+            code: 200,
             data: violationCategoryData,
         });
     } catch (error) {
         res.status(500).json({
             success: false,
             message: "Failed to retrieve violation category",
+            code: 500,
             error: error.message,
         });
     }
@@ -81,12 +86,14 @@ export const createViolationCategory = async (req, res) => {
          res.status(201).json({
             success: true,
             message: "Violation category created successfully",
+            code: 201,
             data: newViolationCategory,
          });
     } catch (error) {
         res.status(500).json({
             success: false,
             message: "Failed to create violation category",
+            code: 500,
             error: error.message,
         });
     }
@@ -101,9 +108,10 @@ export const updateViolationCategory = async (req, res) => {
         });
 
         if (!existingViolationCategory) {
-            res.status(401).json({
+            res.status(404).json({
                 success: false,
                 message: "Violation category not found",
+                code: 404,
             });
         }
 
@@ -113,15 +121,18 @@ export const updateViolationCategory = async (req, res) => {
                 name,
             },
         });
+
         res.status(200).json({
             success: true,
             message: "Violation category updated successfully",
+            code: 200,
             data: updatedViolationCategory,
         });
     } catch (error) {
         res.status(500).json({
             success: false,
             message: "Failed to update violation category",
+            code: 500,
             error: error.message,
         });
     }
@@ -135,24 +146,28 @@ export const deleteViolationCategory = async (req, res) => {
         });
 
         if (!existingViolationCategory) {
-            res.status(401).json({
+            res.status(404).json({
                 success: false,
                 message: "Violation category not found",
+                code: 404,
             });
         }
 
         const deletedViolationCategory = await prisma.violation_category.delete({
             where: { id: parseInt(id) },
         });
+
         res.status(200).json({
             success: true,
             message: "Violation category deleted successfully",
+            code: 200,
             data: deletedViolationCategory,
         });
     } catch (error) {
         res.status(500).json({
             success: false,
             message: "Failed to delete violation category",
+            code: 500,
             error: error.message,
         });
     }
