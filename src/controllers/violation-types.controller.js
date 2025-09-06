@@ -23,12 +23,14 @@ export const getAllViolationTypes = async (req, res) => {
         res.status(200).json({
             success: true,
             message: "Violation types retrivied successfully",
+            code: 200,
             data: formattedData,
         });
     } catch (error) {
         res.status(500).json({
             success: false,
             message: "Failed to retrieve violation types",
+            code: 500,
             error: error.message,
         });
     }
@@ -52,6 +54,7 @@ export const getViolationTypesById = async (req, res) => {
             res.status(404).json({
                 success: false,
                 message: "Violation type not found",
+                code: 404,
             });
         }
 
@@ -66,6 +69,7 @@ export const getViolationTypesById = async (req, res) => {
         res.status(200).json({
             success: true,
             message: "Violation type retrivied successfully",
+            code: 200,
             data: formattedData,
         });
     } catch (error) {
@@ -108,12 +112,14 @@ export const createViolationType = async (req, res) => {
          res.status(201).json({
             success: true,
             message: "Violation type created successfully",
+            code: 201,
             data: newViolationType,
          });
     } catch (error) {
         res.status(500).json({
             success: false,
             message: "Failed to create violation type",
+            code: 500,
             error: error.message,
         });
     }
@@ -128,9 +134,10 @@ export const updateViolationType = async (req, res) => {
         });
 
         if (!existingViolationType) {
-            res.status(401).json({
+            res.status(404).json({
                 success: false,
                 message: "Violation type not found",
+                code: 404,
             });
         }
 
@@ -146,12 +153,14 @@ export const updateViolationType = async (req, res) => {
         res.status(200).json({
             success: true,
             message: "Violation type updated successfully",
+            code: 200,
             data: updatedViolationType,
         });
     } catch (error) {
         res.status(500).json({
             success: false,
             message: "Failed to update violation type",
+            code: 500,
             error: error.message,
         });
     }
@@ -165,9 +174,10 @@ export const deleteViolationType = async (req, res) => {
         });
 
         if (!existingViolationType) {
-            res.status(401).json({
+            res.status(404).json({
                 success: false,
                 message: "Violation type not found",
+                code: 404,
             });
         }
 
@@ -177,12 +187,14 @@ export const deleteViolationType = async (req, res) => {
         res.status(200).json({
             success: true,
             message: "Violation type deleted successfully",
+            code: 200,
             data: deletedViolationType,
         });
     } catch (error) {
         res.status(500).json({
             success: false,
             message: "Failed to delete violation type",
+            code: 500,
             error: error.message,
         });
     }
