@@ -6,6 +6,7 @@ import classesRoutes from "./classes/index.js";
 import violationTypesRoutes from "./violation-types/index.js";
 import statsOverviewRoutes from "./stats-overview/index.js";
 import violationCategoriesRoute from "./violation-categories/index.js";
+import usersRoute from "./users/index.js";
 import { authenticate } from "../middlewares/auth.middleware.js";
 
 const router = express.Router();
@@ -16,6 +17,7 @@ router.use("/students", authenticate, studentRoutes);
 router.use("/classes", authenticate, classesRoutes);
 router.use("/violation-types", authenticate, violationTypesRoutes);
 router.use("/stats-overview", authenticate, statsOverviewRoutes);
-router.use("/violation-categories", violationCategoriesRoute)
+router.use("/violation-categories", authenticate, violationCategoriesRoute);
+router.use("/users", authenticate, usersRoute);
 
 export default router;
