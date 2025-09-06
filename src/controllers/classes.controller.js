@@ -50,7 +50,9 @@ export const createClass = async (req, res) => {
     try {
         const existingClass = await prisma.classes.findFirst({
             where: {
-                class: className,
+                class: {
+                    contains: className,
+                },
             },
         });
 
