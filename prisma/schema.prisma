@@ -3,13 +3,14 @@ generator client {
 }
 
 datasource db {
-   provider = "mysql"
-   url      = env("DATABASE_URL")
+   provider  = "postgresql"
+   url       = env("DATABASE_URL")
+   directUrl = env("DIRECT_URL")
 }
 
 model cache {
    key        String @id @db.VarChar(255)
-   value      String @db.MediumText
+   value      String
    expiration Int
 }
 
@@ -20,21 +21,21 @@ model cache_locks {
 }
 
 model classes {
-   id              Int               @id @default(autoincrement()) @db.UnsignedSmallInt
+   id              Int               @id @default(autoincrement())
    class           String            @unique(map: "classes_class_unique") @db.VarChar(50)
    detail_students detail_students[]
 }
 
 model detail_students {
-   id         Int          @id @default(autoincrement()) @db.UnsignedInt
-   nis        Int          @unique @db.UnsignedInt
-   id_year    Int          @db.UnsignedSmallInt
-   id_class   Int          @db.UnsignedSmallInt
+   id         Int          @id @default(autoincrement())
+   nis        Int          @unique
+   id_year    Int          @db.SmallInt
+   id_class   Int          @db.SmallInt
    created_at DateTime?    @db.Timestamp(0)
    updated_at DateTime?    @db.Timestamp(0)
    students   students     @relation(fields: [nis], references: [nis], onUpdate: Cascade, onDelete: Cascade, map: "detail_students_ibfk_1")
-   classes    classes      @relation(fields: [id_class], references: [id], onUpdate: Cascade, onDelete: Cascade, map: "detail_students_id_class_foreign")
-   years      years        @relation(fields: [id_year], references: [id], onUpdate: Cascade, onDelete: Cascade, map: "detail_students_id_year_foreign")
+   classes    classes      @relation(fields: [id_class], references: [id], onUpdate: Cascade, onDelete: Cascade)
+   years      years        @relation(fields: [id_year], references: [id], onUpdate: Cascade, onDelete: Cascade)
    violations violations[]
 
    @@unique([nis, id_year, id_class], map: "nis_2")
@@ -48,8 +49,8 @@ model failed_jobs {
    uuid       String   @unique(map: "failed_jobs_uuid_unique") @db.VarChar(255)
    connection String   @db.Text
    queue      String   @db.Text
-   payload    String   @db.LongText
-   exception  String   @db.LongText
+   payload    String   @db.Text
+   exception  String   @db.Text
    failed_at  DateTime @default(now()) @db.Timestamp(0)
 }
 
@@ -59,8 +60,8 @@ model job_batches {
    total_jobs     Int
    pending_jobs   Int
    failed_jobs    Int
-   failed_job_ids String  @db.LongText
-   options        String? @db.MediumText
+   failed_job_ids String  @db.Text
+   options        String? @db.Text
    cancelled_at   Int?
    created_at     Int
    finished_at    Int?
@@ -69,11 +70,11 @@ model job_batches {
 model jobs {
    id           Int    @id @default(autoincrement())
    queue        String @db.VarChar(255)
-   payload      String @db.LongText
-   attempts     Int    @db.UnsignedTinyInt
-   reserved_at  Int?   @db.UnsignedInt
-   available_at Int    @db.UnsignedInt
-   created_at   Int    @db.UnsignedInt
+   payload      String @db.Text
+   attempts     Int    @db.SmallInt
+   reserved_at  Int?
+   available_at Int
+   created_at   Int
 
    @@index([queue], map: "jobs_queue_index")
 }
@@ -104,7 +105,7 @@ model sessions {
    user_id       Int?
    ip_address    String? @db.VarChar(45)
    user_agent    String? @db.Text
-   payload       String  @db.LongText
+   payload       String  @db.Text
    last_activity Int
 
    @@index([last_activity], map: "sessions_last_activity_index")
@@ -112,7 +113,7 @@ model sessions {
 }
 
 model students {
-   nis             Int               @id @default(autoincrement()) @db.UnsignedInt
+   nis             Int               @id @default(autoincrement())
    name            String            @db.VarChar(100)
    point           Int               @default(0)
    created_at      DateTime?         @default(now()) @db.Timestamp(0)
@@ -158,7 +159,7 @@ model violation_type {
 
 model violations {
    id              Int             @id @default(autoincrement())
-   student_id      Int             @db.UnsignedInt
+   student_id      Int
    type_id         Int             @db.SmallInt
    teacher_id      Int
    implemented     Boolean
@@ -174,7 +175,7 @@ model violations {
 }
 
 model years {
-   id              Int               @id @default(autoincrement()) @db.UnsignedSmallInt
+   id              Int               @id @default(autoincrement()) @db.SmallInt
    year            String            @unique(map: "years_year_unique") @db.VarChar(10)
    detail_students detail_students[]
 }
