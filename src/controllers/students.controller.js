@@ -15,7 +15,16 @@ export const getAllStudents = async (req, res) => {
                         mode: "insensitive",
                      },
                   },
+
                },
+               {
+                  classes: {
+                     class: {
+                        contains: req.query.search,
+                        mode: "insensitive",
+                     },
+                  },
+               }
             ],
          },
 			{},
