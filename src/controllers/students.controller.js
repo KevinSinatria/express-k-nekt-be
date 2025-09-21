@@ -6,7 +6,18 @@ export const getAllStudents = async (req, res) => {
 		const studentsData = await paginate(
 			prisma.detail_students,
 			req,
-			{},
+			{
+            OR: [
+               {
+                  students: {
+                     name: {
+                        contains: req.query.search,
+                        mode: "insensitive",
+                     },
+                  },
+               },
+            ],
+         },
 			{},
 			{
 				nis: true,
@@ -22,7 +33,7 @@ export const getAllStudents = async (req, res) => {
 					},
 				},
 			},
-			15
+			10
 		);
 
 		const formattedStudentsData = studentsData.data.map((student) => ({
