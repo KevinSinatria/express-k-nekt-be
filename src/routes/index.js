@@ -6,6 +6,7 @@ import classesRoutes from "./classes/index.js";
 import violationTypesRoutes from "./violation-types/index.js";
 import statsOverviewRoutes from "./stats-overview/index.js";
 import violationCategoriesRoute from "./violation-categories/index.js";
+import yearPeriodsRoute from "./year-periods/index.js";
 import usersRoute from "./users/index.js";
 import { authenticate } from "../middlewares/auth.middleware.js";
 
@@ -19,5 +20,6 @@ router.use("/violation-types", authenticate, violationTypesRoutes);
 router.use("/stats-overview", authenticate, statsOverviewRoutes);
 router.use("/violation-categories", authenticate, violationCategoriesRoute);
 router.use("/users", authenticate, usersRoute);
+router.use("/year-periods", yearPeriodsRoute);
 
 export default router;
