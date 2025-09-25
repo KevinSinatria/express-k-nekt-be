@@ -3,8 +3,8 @@ import {
   createYearPeriod,
   deleteYearPeriod,
   getAllYearPeriods,
-} from "../../controllers/year-period.controller";
-import { authenticate } from "../../middlewares/auth.middleware";
+} from "../../controllers/year-period.controller.js";
+import { authenticate } from "../../middlewares/auth.middleware.js";
 
 const router = express.Router();
 

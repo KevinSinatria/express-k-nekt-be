@@ -10,7 +10,7 @@ export const getAllViolations = async (req, res) => {
         OR: [
           {
             detail_students: {
-              students: {
+              student: {
                 name: {
                   contains: req.query.search,
                   mode: "insensitive",
@@ -71,17 +71,17 @@ export const getAllViolations = async (req, res) => {
         id: true,
         detail_students: {
           select: {
-            nis: true,
-            students: {
-              select: {
-                name: true,
-              },
-            },
             classes: {
               select: {
                 class: true,
               },
             },
+          },
+        },
+        student: {
+          select: {
+            nis: true,
+            name: true,
           },
         },
         violation_type: {
@@ -110,8 +110,8 @@ export const getAllViolations = async (req, res) => {
 
     const formattedViolationsData = violationsData.data.map((violation) => ({
       id: violation.id,
-      nis: violation.detail_students.nis,
-      name: violation.detail_students.students.name,
+      nis: violation.student.nis,
+      name: violation.student.name,
       class: violation.detail_students.classes.class,
       violation_name: violation.violation_type.name,
       punishment_point: violation.violation_type.point,
@@ -135,15 +135,91 @@ export const getAllViolations = async (req, res) => {
   }
 };
 
+export const getAllViolationsForExport = async (req, res) => {
+  try {
+    const violations = await prisma.violations.findMany({
+      select: {
+        id: true,
+        detail_students: {
+          select: {
+            nis: true,
+            classes: {
+              select: {
+                class: true,
+              },
+            },
+          },
+        },
+        student: {
+          select: {
+            name: true,
+          },
+        },
+        violation_type: {
+          select: {
+            name: true,
+            point: true,
+            punishment: true,
+            violation_category: {
+              select: {
+                name: true,
+              },
+            },
+          },
+        },
+        implemented: true,
+        users: {
+          select: {
+            username: true,
+          },
+        },
+        created_at: true,
+        updated_at: true,
+      },
+    });
+
+    const formattedViolations = violations.map((violation) => ({
+      id: violation.id,
+      nis: violation.detail_students.nis,
+      name: violation.student.name,
+      class: violation.detail_students.classes.class,
+      violation_name: violation.violation_type.name,
+      punishment_point: violation.violation_type.point,
+      punishment: violation.violation_type.punishment,
+      violation_category: violation.violation_type.violation_category.name,
+      implemented: violation.implemented,
+      teacher: violation.users.username,
+      created_at: violation.created_at,
+      updated_at: violation.updated_at,
+    }));
+
+    res.status(200).json({
+      success: true,
+      message: "Get all violations successfully",
+      code: 200,
+      data: formattedViolations,
+    });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({
+      success: false,
+      message: "Internal server error",
+      code: 500,
+    });
+  }
+};
+
 export const createViolation = async (req, res) => {
   try {
-    const { student_id, violation_type_id, teacher_id, implemented } = req.body;
+    const { student_id, violation_type_id, teacher_id, implemented, nis } =
+      req.body;
     const newViolation = await prisma.violations.create({
       data: {
         student_id,
         type_id: violation_type_id,
         teacher_id,
         implemented,
+        nis: Number(nis),
       },
     });
 
@@ -182,12 +258,7 @@ export const getViolationById = async (req, res) => {
         id: true,
         detail_students: {
           select: {
-            nis: true,
-            students: {
-              select: {
-                name: true,
-              },
-            },
+            id: true,
             classes: {
               select: {
                 class: true,
@@ -195,8 +266,15 @@ export const getViolationById = async (req, res) => {
             },
           },
         },
+        student: {
+          select: {
+            nis: true,
+            name: true,
+          },
+        },
         violation_type: {
           select: {
+            id: true,
             name: true,
             point: true,
             punishment: true,
@@ -209,6 +287,7 @@ export const getViolationById = async (req, res) => {
         },
         users: {
           select: {
+            id: true,
             username: true,
           },
         },
@@ -220,15 +299,18 @@ export const getViolationById = async (req, res) => {
 
     const formattedViolationData = {
       id: violation.id,
-      nis: violation.detail_students.nis,
-      name: violation.detail_students.students.name,
+      nis: violation.student.nis,
+      name: violation.student.name,
+      student_id: violation.detail_students.id,
       class: violation.detail_students.classes.class,
+      violation_type_id: violation.violation_type.id,
       violation_name: violation.violation_type.name,
       punishment_point: violation.violation_type.point,
       punishment: violation.violation_type.punishment,
       violation_category: violation.violation_type.violation_category.name,
       implemented: violation.implemented,
       teacher: violation.users.username,
+      teacher_id: violation.users.id,
       created_at: violation.created_at,
       updated_at: violation.updated_at,
     };
@@ -253,7 +335,7 @@ export const getViolationById = async (req, res) => {
 export const updateViolationById = async (req, res) => {
   try {
     const { id } = req.params;
-    const { student_id, violation_type_id, teacher_id } = req.body;
+    const { student_id, violation_type_id, teacher_id, nis } = req.body;
 
     const updatedViolation = await prisma.violations.update({
       where: {
@@ -263,6 +345,7 @@ export const updateViolationById = async (req, res) => {
         student_id,
         type_id: violation_type_id,
         teacher_id,
+        nis: Number(nis),
       },
     });
 
