@@ -11,7 +11,7 @@ export const getAllStudents = async (req, res) => {
           {
             OR: [
               {
-                students: {
+                student: {
                   name: {
                     contains: req.query.search,
                     mode: "insensitive",
@@ -39,7 +39,7 @@ export const getAllStudents = async (req, res) => {
       {
         id: true,
         nis: true,
-        students: {
+        student: {
           select: {
             name: true,
             point: true,
@@ -51,14 +51,14 @@ export const getAllStudents = async (req, res) => {
           },
         },
       },
-      10
+      5
     );
 
     const formattedStudentsData = studentsData.data.map((student) => ({
       id: student.id,
       nis: student.nis,
-      name: student.students.name,
-      point: student.students.point,
+      name: student.student.name,
+      point: student.student.point,
       class: student.classes.class,
     }));
 
@@ -141,7 +141,7 @@ export const getStudentByNIS = async (req, res) => {
       },
       select: {
         nis: true,
-        students: {
+        student: {
           select: {
             name: true,
             point: true,
@@ -165,8 +165,8 @@ export const getStudentByNIS = async (req, res) => {
 
     const formattedStudentData = {
       nis: studentData.nis,
-      name: studentData.students.name,
-      point: studentData.students.point,
+      name: studentData.student.name,
+      point: studentData.student.point,
       class: studentData.classes.class,
     };
 

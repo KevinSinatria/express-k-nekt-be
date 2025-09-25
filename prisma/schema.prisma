@@ -33,10 +33,10 @@ model detail_students {
    id_class       Int          @db.SmallInt
    created_at     DateTime?    @db.Timestamp(0)
    updated_at     DateTime?    @db.Timestamp(0)
-   students       students     @relation(fields: [nis], references: [nis], onUpdate: Cascade, onDelete: Cascade, map: "detail_students_ibfk_1")
+   student        students     @relation(fields: [nis], references: [nis], onUpdate: Cascade, onDelete: Cascade, map: "detail_students_ibfk_1")
    classes        classes      @relation(fields: [id_class], references: [id], onUpdate: Cascade, onDelete: Cascade)
    year_period    year_period? @relation(fields: [id_year_period], references: [id])
-   violations     violations?
+   violations     violations[]
 
    @@unique([nis, id_class], map: "nis_2")
    @@index([id_class], map: "detail_students_id_class_foreign")
@@ -118,7 +118,7 @@ model students {
    created_at      DateTime?         @default(now()) @db.Timestamp(0)
    updated_at      DateTime?         @default(now()) @db.Timestamp(0)
    detail_students detail_students[]
-   violations      violations?
+   violations      violations[]
 }
 
 model users {
@@ -159,17 +159,17 @@ model violation_type {
 
 model violations {
    id              Int             @id @default(autoincrement())
-   student_id      Int             @unique
-   nis             Int             @unique
+   student_id      Int
+   nis             Int
    type_id         Int             @db.SmallInt
    teacher_id      Int
    implemented     Boolean
    created_at      DateTime?       @default(now()) @db.Timestamp(0)
    updated_at      DateTime?       @default(now()) @updatedAt @db.Timestamp(0)
-   student         students        @relation(fields: [nis], references: [nis], onUpdate: Cascade, onDelete: Cascade, map: "violations_ibfk_4")
-   detail_students detail_students @relation(fields: [student_id], references: [id], onUpdate: Restrict, map: "violations_ibfk_1")
+   detail_students detail_students @relation(fields: [student_id], references: [id], onUpdate: Cascade, onDelete: Cascade, map: "violations_ibfk_1")
    violation_type  violation_type  @relation(fields: [type_id], references: [id], onUpdate: Restrict, map: "violations_ibfk_2")
    users           users           @relation(fields: [teacher_id], references: [id], onUpdate: Restrict, map: "violations_ibfk_3")
+   student         students        @relation(fields: [nis], references: [nis], onUpdate: Cascade, onDelete: Cascade)
 
    @@index([nis], map: "student_nis")
    @@index([student_id], map: "student_id")
