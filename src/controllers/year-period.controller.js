@@ -1,22 +1,44 @@
-import prisma from "../models/prisma";
+import prisma from "../models/prisma.js";
 import { paginate } from "../utils/paginate.js";
 
 export const getAllYearPeriods = async (req, res) => {
   try {
     const yearPeriods = await paginate(
-      prisma.year_periods,
+      prisma.year_period,
       req,
-      {},
       {
-        created_at: "desc",
+        OR: [
+          {
+            start_year: {
+              lt: new Date().getFullYear(),
+            },
+          },
+          {
+            start_year: {
+              equals: new Date().getFullYear(),
+            },
+          },
+        ],
+      },
+      {
+        start_year: "desc",
       },
       {
         id: true,
-        year: true,
-        period: true,
+        start_year: true,
+        end_year: true,
+        display_name: true,
       },
       10
     );
+
+    res.status(200).json({
+      success: true,
+      message: "Year periods fetched successfully",
+      code: 200,
+      data: yearPeriods.data,
+      meta: yearPeriods.pagination,
+    });
   } catch (error) {
     console.error(error);
     res.status(500).json({
@@ -27,10 +49,9 @@ export const getAllYearPeriods = async (req, res) => {
   }
 };
 
-
 export const createYearPeriod = async (req, res) => {
   try {
-    const { year} = req.body;
+    const { year } = req.body;
 
     const newYearPeriod = await prisma.year_period.create({
       data: {
