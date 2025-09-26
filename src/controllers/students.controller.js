@@ -50,6 +50,11 @@ export const getAllStudents = async (req, res) => {
             class: true,
           },
         },
+        year_period: {
+          select: {
+            display_name: true,
+          },
+        },
       },
       5
     );
@@ -60,6 +65,7 @@ export const getAllStudents = async (req, res) => {
       name: student.student.name,
       point: student.student.point,
       class: student.classes.class,
+      year_period: student.year_period.display_name,
     }));
 
     res.status(200).json({
@@ -85,14 +91,14 @@ export const createStudent = async (req, res) => {
 
     const newStudent = await prisma.students.create({
       data: {
-        nis: Number(nis),
+        nis: nis,
         name,
         point: Number(point),
         created_at: new Date(),
         updated_at: new Date(),
         detail_students: {
           create: {
-            id_year: Number(year_id),
+            id_year_period: Number(year_id),
             id_class: Number(class_id),
           },
         },
@@ -134,10 +140,22 @@ export const createStudent = async (req, res) => {
 export const getStudentByNIS = async (req, res) => {
   try {
     const { nis } = req.params;
+    const { year_id } = req.query;
 
     const studentData = await prisma.detail_students.findFirst({
       where: {
-        nis: Number(nis),
+        AND: [
+          {
+            student: {
+              nis: nis,
+            },
+          },
+          {
+            id_year_period: {
+              equals: Number(year_id),
+            },
+          },
+        ],
       },
       select: {
         nis: true,
@@ -152,6 +170,11 @@ export const getStudentByNIS = async (req, res) => {
             class: true,
           },
         },
+        year_period: {
+          select: {
+            display_name: true,
+          },
+        },
       },
     });
 
@@ -164,10 +187,12 @@ export const getStudentByNIS = async (req, res) => {
     }
 
     const formattedStudentData = {
+      id: studentData.id,
       nis: studentData.nis,
       name: studentData.student.name,
       point: studentData.student.point,
       class: studentData.classes.class,
+      year_period: studentData.year_period.display_name,
     };
 
     res.status(200).json({
@@ -193,7 +218,7 @@ export const updateStudentByNIS = async (req, res) => {
 
     const updatedStudent = await prisma.students.update({
       where: {
-        nis: Number(nis_param),
+        nis: nis_param,
       },
       data: {
         name,
