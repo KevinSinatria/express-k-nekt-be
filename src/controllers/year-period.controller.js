@@ -49,6 +49,40 @@ export const getAllYearPeriods = async (req, res) => {
   }
 };
 
+export const getYearPeriodById = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    const yearPeriod = await prisma.year_period.findUnique({
+      where: {
+        id: Number(id),
+      },
+    });
+
+    if (!yearPeriod) {
+      return res.status(404).json({
+        success: false,
+        message: "Year period not found",
+        code: 404,
+      });
+    }
+
+    res.status(200).json({
+      success: true,
+      message: "Year period fetched successfully",
+      code: 200,
+      data: yearPeriod,
+    });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({
+      success: false,
+      message: "Internal server error",
+      code: 500,
+    });
+  }
+};
+
 export const createYearPeriod = async (req, res) => {
   try {
     const { year } = req.body;
