@@ -1,5 +1,8 @@
 import prisma from "../models/prisma.js";
 import { paginate } from "../utils/paginate.js";
+import xlsx from "xlsx";
+import fs from "fs";
+import roman from "roman-numerals";
 
 export const getAllClasses = async (req, res) => {
   try {
@@ -39,6 +42,73 @@ export const getAllClasses = async (req, res) => {
   }
 };
 
+export const getNextClassesPromote = async (req, res) => {
+  try {
+    const { year_id, nis } = req.query;
+    const classByStudent = await prisma.detail_students.findFirst({
+      where: {
+        AND: [
+          {
+            student: {
+              nis,
+            },
+          },
+          {
+            id_year_period: {
+              equals: Number(year_id),
+            },
+          },
+        ],
+      },
+      select: {
+        classes: {
+          select: {
+            class: true,
+          },
+        },
+      },
+    });
+
+    if (!classByStudent) {
+      return res.status(404).json({
+        success: false,
+        message: "Class not found",
+        code: 404,
+      });
+    }
+
+    const className = classByStudent.classes.class;
+    const classGrade = className.split(" ")[0];
+    const classInNumber = roman.toArabic(classGrade);
+    const nextClassGrade = roman.toRoman(classInNumber + 1);
+
+    const nextClasses = await prisma.classes.findMany({
+      where: {
+        class: {
+          startsWith: nextClassGrade + " ",
+        },
+      },
+      select: {
+        id: true,
+        class: true,
+      },
+    });
+
+    res.status(200).json({
+      success: true,
+      message: "Classes retrivied successfully",
+      code: 200,
+      data: nextClasses,
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: "Failed to retrieve classes",
+      code: 500,
+    });
+  }
+};
+
 export const getClassById = async (req, res) => {
   const { id: classId } = req.params;
   const { year_id } = req.query;
@@ -65,6 +135,11 @@ export const getClassById = async (req, res) => {
           where: {
             id_year_period: {
               equals: yearId,
+            },
+          },
+          orderBy: {
+            student: {
+              name: "asc",
             },
           },
           select: {
@@ -158,6 +233,68 @@ export const createClass = async (req, res) => {
     res.status(500).json({
       success: false,
       message: "Failed to create class",
+      code: 500,
+    });
+  }
+};
+
+export const importClassesFromExcel = async (req, res) => {
+  const filePath = req.file.path;
+  try {
+    const workbook = xlsx.readFile(filePath);
+    const sheetName = workbook.SheetNames[0];
+    const sheet = workbook.Sheets[sheetName];
+    const dataFromExcel = xlsx.utils.sheet_to_json(sheet);
+
+    if (dataFromExcel.length === 0) {
+      return res.status(400).json({
+        success: false,
+        message: "File excel kosong.",
+        code: 400,
+      });
+    }
+
+    const classNamesFromExcel = [
+      ...new Set(dataFromExcel.map((row) => row["Kelas"])),
+    ];
+
+    const classesInDb = await prisma.classes.findMany({
+      where: {
+        class: { in: classNamesFromExcel },
+      },
+      select: { id: true, class: true },
+    });
+
+    const classMap = new Map(classesInDb.map((c) => [c.class, c.id]));
+
+    const classesToCreate = classNamesFromExcel
+      .filter((className) => !classMap.has(className))
+      .map((className) => ({ class: String(className).toUpperCase() }));
+
+    if (classesToCreate.length > 0) {
+      await prisma.classes.createMany({
+        data: classesToCreate,
+      });
+    } else {
+      return res.status(400).json({
+        success: false,
+        message: "Semua kelas sudah ada di database.",
+        code: 400,
+      });
+    }
+
+    fs.unlinkSync(filePath);
+
+    res.status(200).json({
+      success: true,
+      message: `Impor sukses! ${classesToCreate.length} kelas baru telah ditambahkan.`,
+      code: 200,
+    });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({
+      success: false,
+      message: "Failed to import classes",
       code: 500,
     });
   }

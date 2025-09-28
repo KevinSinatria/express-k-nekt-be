@@ -18,6 +18,11 @@ export const getAllYearPeriods = async (req, res) => {
               equals: new Date().getFullYear(),
             },
           },
+          {
+            start_year: {
+              lt: new Date().getFullYear() + 4,
+            },
+          },
         ],
       },
       {
