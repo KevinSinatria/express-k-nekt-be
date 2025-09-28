@@ -213,13 +213,51 @@ export const createViolation = async (req, res) => {
   try {
     const { student_id, violation_type_id, teacher_id, implemented, nis } =
       req.body;
+
+    const punishmentPoint = await prisma.violation_type.findUnique({
+      where: {
+        id: Number(violation_type_id),
+      },
+      select: {
+        point: true,
+      },
+    });
+
+    const pointsNow = await prisma.violations.findMany({
+      where: {
+        nis: nis,
+      },
+      select: {
+        violation_type: {
+          select: {
+            point: true,
+          },
+        },
+      },
+    });
+
+    const totalPointsNow = pointsNow.reduce((total, point) => {
+      return total + point.violation_type.point;
+    }, 0);
+
+    const totalPoint = totalPointsNow + punishmentPoint.point;
+
+    await prisma.students.update({
+      where: {
+        nis: nis,
+      },
+      data: {
+        point: totalPoint,
+      },
+    });
+
     const newViolation = await prisma.violations.create({
       data: {
         student_id,
         type_id: violation_type_id,
         teacher_id,
         implemented,
-        nis: Number(nis),
+        nis,
       },
     });
 

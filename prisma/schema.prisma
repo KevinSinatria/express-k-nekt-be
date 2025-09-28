@@ -31,16 +31,16 @@ model detail_students {
    nis            String
    id_year_period Int          @default(1) @db.SmallInt
    id_class       Int          @db.SmallInt
-   created_at     DateTime?    @db.Timestamp(0)
-   updated_at     DateTime?    @db.Timestamp(0)
+   created_at     DateTime?    @default(now())
+   updated_at     DateTime?    @updatedAt
    student        students     @relation(fields: [nis], references: [nis], onUpdate: Cascade, onDelete: Cascade, map: "detail_students_ibfk_1")
    classes        classes      @relation(fields: [id_class], references: [id], onUpdate: Cascade, onDelete: Cascade)
    year_period    year_period? @relation(fields: [id_year_period], references: [id])
    violations     violations[]
 
-   @@unique([nis, id_class], map: "nis_2")
+   @@unique([nis, id_year_period], map: "unique_student_year")
    @@index([id_class], map: "detail_students_id_class_foreign")
-   @@index([nis], map: "nis")
+   @@index([id_year_period], map: "detail_students_year_period_foreign")
 }
 
 model failed_jobs {
