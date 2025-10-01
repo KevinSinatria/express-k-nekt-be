@@ -1,69 +1,94 @@
+import e from "express";
 import prisma from "../models/prisma.js";
 import { paginate } from "../utils/paginate.js";
 
 export const getAllViolations = async (req, res) => {
   try {
+    const {
+      search,
+      year_id,
+      timePreset,
+      classId,
+      categoryId,
+      teacherId,
+      status,
+    } = req.query;
+    const where = {};
+
+    // --- Kondisi untuk Search (menggunakan OR) ---
+    if (search) {
+      where.OR = [
+        {
+          detail_students: {
+            student: { name: { contains: search, mode: "insensitive" } },
+          },
+        },
+        {
+          detail_students: {
+            classes: { class: { contains: search, mode: "insensitive" } },
+          },
+        },
+        { violation_type: { name: { contains: search, mode: "insensitive" } } },
+        { users: { username: { contains: search, mode: "insensitive" } } },
+      ];
+    }
+
+    // --- Kondisi untuk Filter Waktu ---
+    if (timePreset && timePreset !== "all") {
+      const now = new Date();
+      let fromDate;
+      switch (timePreset) {
+        case "today":
+          fromDate = new Date(now.setHours(0, 0, 0, 0));
+          break;
+        case "last_7_days":
+          fromDate = new Date(new Date().setDate(now.getDate() - 7));
+          break;
+        case "last_30_days":
+          fromDate = new Date(new Date().setDate(now.getDate() - 30));
+          break;
+        case "this_month":
+          fromDate = new Date(now.getFullYear(), now.getMonth(), 1);
+          break;
+        case "this_year":
+          fromDate = new Date(now.getFullYear(), 0, 1);
+          break;
+      }
+      if (fromDate) {
+        where.created_at = { gte: fromDate };
+      }
+    }
+
+    // --- Kondisi untuk Filter Dropdown ---
+    if (year_id && year_id !== "all") {
+      where.detail_students = {
+        ...where.detail_students,
+        id_year_period: parseInt(year_id),
+      };
+    }
+    if (classId && classId !== "all") {
+      where.detail_students = {
+        ...where.detail_students,
+        id_class: parseInt(classId),
+      };
+    }
+    if (categoryId && categoryId !== "all") {
+      where.violation_type = {
+        ...where.violation_type,
+        category_id: parseInt(categoryId),
+      };
+    }
+    if (teacherId && teacherId !== "all") {
+      where.teacher_id = parseInt(teacherId);
+    }
+    if (status && status !== "all") {
+      where.implemented = status === "true" ? true : false;
+    }
+
     const violationsData = await paginate(
       prisma.violations,
       req,
-      {
-        OR: [
-          {
-            detail_students: {
-              student: {
-                name: {
-                  contains: req.query.search,
-                  mode: "insensitive",
-                },
-              },
-            },
-          },
-          {
-            detail_students: {
-              classes: {
-                class: {
-                  contains: req.query.search,
-                  mode: "insensitive",
-                },
-              },
-            },
-          },
-          {
-            violation_type: {
-              name: {
-                contains: req.query.search,
-                mode: "insensitive",
-              },
-            },
-          },
-          {
-            users: {
-              username: {
-                contains: req.query.search,
-                mode: "insensitive",
-              },
-            },
-          },
-          {
-            violation_type: {
-              violation_category: {
-                name: {
-                  contains: req.query.search,
-                  mode: "insensitive",
-                },
-              },
-            },
-          },
-          {
-            violation_type: {
-              punishment: {
-                contains: req.query.search,
-                mode: "insensitive",
-              },
-            },
-          },
-        ],
-      },
+      where,
       {
         created_at: "desc",
       },
@@ -223,24 +248,44 @@ export const createViolation = async (req, res) => {
       },
     });
 
-    const pointsNow = await prisma.violations.findMany({
+    // const pointsNow = await prisma.violations.findMany({
+    //   where: {
+    //     nis: nis,
+    //   },
+    //   select: {
+    //     violation_type: {
+    //       select: {
+    //         point: true,
+    //       },
+    //     },
+    //   },
+    // });
+
+    const pointsNowFromStudentData = await prisma.students.findUnique({
       where: {
         nis: nis,
       },
       select: {
-        violation_type: {
-          select: {
-            point: true,
-          },
-        },
+        point: true,
       },
     });
+    const pointsNow = pointsNowFromStudentData.point;
 
-    const totalPointsNow = pointsNow.reduce((total, point) => {
-      return total + point.violation_type.point;
-    }, 0);
+    // const totalPointsNowInViolations = pointsNow.reduce((total, point) => {
+    //   return total + point.violation_type.point;
+    // }, 0);
 
-    const totalPoint = totalPointsNow + punishmentPoint.point;
+    // if (pointsNowFromStudentData && totalPointsNowInViolations === 0) {
+    //   pointsInit = pointsNowFromStudentData.point;
+    // } else {
+    //   pointsInit = 0;
+    // }
+
+    // const totalPointsNow = pointsNow.reduce((total, point) => {
+    //   return total + point.violation_type.point;
+    // }, pointsInit);
+
+    const totalPoint = pointsNow + punishmentPoint.point;
 
     await prisma.students.update({
       where: {
@@ -273,6 +318,7 @@ export const createViolation = async (req, res) => {
       success: true,
       message: "Violation created successfully",
       code: 201,
+      totalPoints: totalPoint,
     });
   } catch (error) {
     console.error(error);
@@ -370,10 +416,97 @@ export const getViolationById = async (req, res) => {
   }
 };
 
+export const getFilterDataForm = async (req, res) => {
+  try {
+    const classes = await prisma.classes.findMany({
+      select: {
+        id: true,
+        class: true,
+      },
+    });
+
+    const categories = await prisma.violation_category.findMany({
+      select: {
+        id: true,
+        name: true,
+      },
+    });
+
+    const teachers = await prisma.users.findMany({
+      select: {
+        id: true,
+        username: true,
+      },
+    });
+
+    res.status(200).json({
+      success: true,
+      message: "Get filter data form successfully",
+      code: 200,
+      data: {
+        classes,
+        categories,
+        teachers,
+      },
+    });
+  } catch (error) {
+    console.error(error);
+
+    res.status(500).json({
+      success: false,
+      message: "Internal server error",
+      code: 500,
+    });
+  }
+};
+
 export const updateViolationById = async (req, res) => {
   try {
     const { id } = req.params;
     const { student_id, violation_type_id, teacher_id, nis } = req.body;
+
+    const punishmentPointFromDB = await prisma.violations.findUnique({
+      where: {
+        id: Number(id),
+      },
+      select: {
+        violation_type: {
+          select: {
+            point: true,
+          },
+        },
+      },
+    });
+    const punishmentPointFrom = punishmentPointFromDB.violation_type.point;
+    const punishmentPointToDB = await prisma.violation_type.findUnique({
+      where: {
+        id: Number(violation_type_id),
+      },
+      select: {
+        point: true,
+      },
+    });
+    const punishmentPointTo = punishmentPointToDB.point;
+    const currentPunismentPointStudentDB = await prisma.students.findUnique({
+      where: {
+        nis: nis,
+      },
+      select: {
+        point: true,
+      },
+    });
+    const currentPunismentPointStudent = currentPunismentPointStudentDB.point;
+
+    const totalPunishmentPoint =
+      currentPunismentPointStudent - punishmentPointFrom + punishmentPointTo;
+    await prisma.students.update({
+      where: {
+        nis: nis,
+      },
+      data: {
+        point: totalPunishmentPoint,
+      },
+    });
 
     const updatedViolation = await prisma.violations.update({
       where: {
@@ -383,7 +516,7 @@ export const updateViolationById = async (req, res) => {
         student_id,
         type_id: violation_type_id,
         teacher_id,
-        nis: Number(nis),
+        nis: nis,
       },
     });
 
@@ -413,6 +546,49 @@ export const updateViolationById = async (req, res) => {
 export const deleteViolationById = async (req, res) => {
   try {
     const { id } = req.params;
+    const punishmentPointDB = await prisma.violations.findUnique({
+      where: {
+        id: Number(id),
+      },
+      select: {
+        violation_type: {
+          select: {
+            point: true,
+          },
+        },
+        nis: true,
+      },
+    });
+
+    if (!punishmentPointDB) {
+      return res.status(404).json({
+        success: false,
+        message: "Violation not found",
+        code: 404,
+      });
+    }
+
+    const punishmentPoint = punishmentPointDB.violation_type.point;
+    const currentPunismentPointStudentDB = await prisma.students.findUnique({
+      where: {
+        nis: punishmentPointDB.nis,
+      },
+      select: {
+        point: true,
+      },
+    });
+    const currentPunismentPointStudent = currentPunismentPointStudentDB.point;
+
+    const totalPunishmentPoint = currentPunismentPointStudent - punishmentPoint;
+    await prisma.students.update({
+      where: {
+        nis: punishmentPointDB.nis,
+      },
+      data: {
+        point: totalPunishmentPoint,
+      },
+    });
+
     const deletedViolation = await prisma.violations.delete({
       where: {
         id: Number(id),
