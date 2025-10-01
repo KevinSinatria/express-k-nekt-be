@@ -255,7 +255,11 @@ export const importClassesFromExcel = async (req, res) => {
     }
 
     const classNamesFromExcel = [
-      ...new Set(dataFromExcel.map((row) => row["Kelas"])),
+      ...new Set(
+        dataFromExcel
+          .map((row) => row["Kelas"])
+          .filter((className) => className)
+      ),
     ];
 
     const classesInDb = await prisma.classes.findMany({
