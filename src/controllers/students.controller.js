@@ -223,7 +223,7 @@ export const importStudentsFromExcel = async (req, res) => {
 
     // --- Langkah Validasi Kelas yang Efisien ---
     const classNamesFromExcel = [
-      ...new Set(dataFromExcel.map((row) => row["Kelas"])),
+      ...new Set(dataFromExcel.map((row) => row["Kelas"]))
     ];
 
     const classesInDb = await prisma.classes.findMany({
@@ -435,18 +435,7 @@ export const updateStudentByNIS = async (req, res) => {
 
     const updatedStudent = await prisma.students.update({
       where: {
-        AND: [
-          {
-            nis: nis_param,
-          },
-          {
-            detail_students: {
-              some: {
-                id_year_period: Number(year_id),
-              },
-            },
-          },
-        ],
+        nis: nis_param,
       },
       data: {
         name,
@@ -455,7 +444,14 @@ export const updateStudentByNIS = async (req, res) => {
         detail_students: {
           updateMany: {
             where: {
-              nis: nis_param,
+              AND: [
+                {
+                  nis: nis_param,
+                },
+                {
+                  id_year_period: Number(year_id),
+                },
+              ],
             },
             data: {
               id_year_period: Number(year_id),

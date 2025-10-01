@@ -4,6 +4,7 @@ import {
   deleteViolationById,
   getAllViolations,
   getAllViolationsForExport,
+  getFilterDataForm,
   getViolationById,
   implementViolation,
   unimplementViolation,
@@ -14,6 +15,7 @@ const router = express.Router();
 
 router.get("/", getAllViolations);
 router.get("/all", getAllViolationsForExport);
+router.get("/filter-data-form", getFilterDataForm);
 router.post("/", createViolation);
 router.get("/:id", getViolationById);
 router.put("/:id", updateViolationById);
