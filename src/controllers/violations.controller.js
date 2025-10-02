@@ -123,7 +123,7 @@ export const getAllViolations = async (req, res) => {
         },
         users: {
           select: {
-            username: true,
+            fullname: true,
           },
         },
         implemented: true,
@@ -143,7 +143,7 @@ export const getAllViolations = async (req, res) => {
       punishment: violation.violation_type.punishment,
       violation_category: violation.violation_type.violation_category.name,
       implemented: violation.implemented,
-      teacher: violation.users.username,
+      teacher: violation.users.fullname,
       created_at: violation.created_at,
       updated_at: violation.updated_at,
     }));
@@ -195,7 +195,7 @@ export const getAllViolationsForExport = async (req, res) => {
         implemented: true,
         users: {
           select: {
-            username: true,
+            fullname: true,
           },
         },
         created_at: true,
@@ -213,7 +213,7 @@ export const getAllViolationsForExport = async (req, res) => {
       punishment: violation.violation_type.punishment,
       violation_category: violation.violation_type.violation_category.name,
       implemented: violation.implemented,
-      teacher: violation.users.username,
+      teacher: violation.users.fullname,
       created_at: violation.created_at,
       updated_at: violation.updated_at,
     }));
