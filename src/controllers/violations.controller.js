@@ -236,8 +236,14 @@ export const getAllViolationsForExport = async (req, res) => {
 
 export const createViolation = async (req, res) => {
   try {
-    const { student_id, violation_type_id, teacher_id, implemented, nis } =
-      req.body;
+    const {
+      student_id,
+      violation_type_id,
+      teacher_id,
+      implemented,
+      nis,
+      description,
+    } = req.body;
 
     const punishmentPoint = await prisma.violation_type.findUnique({
       where: {
@@ -302,6 +308,7 @@ export const createViolation = async (req, res) => {
         type_id: violation_type_id,
         teacher_id,
         implemented,
+        description,
         nis,
       },
     });
@@ -340,6 +347,7 @@ export const getViolationById = async (req, res) => {
       },
       select: {
         id: true,
+        description: true,
         detail_students: {
           select: {
             id: true,
@@ -391,6 +399,7 @@ export const getViolationById = async (req, res) => {
       violation_name: violation.violation_type.name,
       punishment_point: violation.violation_type.point,
       punishment: violation.violation_type.punishment,
+      description: violation.description,
       violation_category: violation.violation_type.violation_category.name,
       implemented: violation.implemented,
       teacher: violation.users.username,
@@ -463,7 +472,8 @@ export const getFilterDataForm = async (req, res) => {
 export const updateViolationById = async (req, res) => {
   try {
     const { id } = req.params;
-    const { student_id, violation_type_id, teacher_id, nis } = req.body;
+    const { student_id, violation_type_id, teacher_id, nis, description } =
+      req.body;
 
     const punishmentPointFromDB = await prisma.violations.findUnique({
       where: {
@@ -517,6 +527,7 @@ export const updateViolationById = async (req, res) => {
         type_id: violation_type_id,
         teacher_id,
         nis: nis,
+        description,
       },
     });
 
