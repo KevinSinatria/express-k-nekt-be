@@ -36,6 +36,7 @@ export const loginController = async (req, res) => {
       {
         id: user.id,
         username: user.username,
+        fullname: user.fullname,
         role: user.role,
       },
       process.env.ACCESS_TOKEN_KEY,
@@ -47,6 +48,7 @@ export const loginController = async (req, res) => {
       user: {
         id: user.id,
         username: user.username,
+        fullname: user.fullname,
         role: user.role,
       },
     });
