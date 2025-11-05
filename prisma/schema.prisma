@@ -1,192 +1,194 @@
 generator client {
-   provider = "prisma-client-js"
+  provider = "prisma-client-js"
 }
 
 datasource db {
-   provider  = "postgresql"
-   url       = env("DATABASE_URL")
-   directUrl = env("DIRECT_URL")
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
 }
 
 model cache {
-   key        String @id @db.VarChar(255)
-   value      String
-   expiration Int
+  key        String @id @db.VarChar(255)
+  value      String
+  expiration Int
 }
 
 model cache_locks {
-   key        String @id @db.VarChar(255)
-   owner      String @db.VarChar(255)
-   expiration Int
+  key        String @id @db.VarChar(255)
+  owner      String @db.VarChar(255)
+  expiration Int
 }
 
 model classes {
-   id              Int               @id @default(autoincrement())
-   class           String            @unique(map: "classes_class_unique") @db.VarChar(50)
-   detail_students detail_students[]
+  id              Int               @id @default(autoincrement())
+  class           String            @unique(map: "classes_class_unique") @db.VarChar(50)
+  detail_students detail_students[]
 }
 
 model detail_students {
-   id             Int          @id @default(autoincrement())
-   nis            String
-   id_year_period Int          @default(1) @db.SmallInt
-   id_class       Int          @db.SmallInt
-   created_at     DateTime?    @default(now())
-   updated_at     DateTime?    @updatedAt
-   student        students     @relation(fields: [nis], references: [nis], onUpdate: Cascade, onDelete: Cascade, map: "detail_students_ibfk_1")
-   classes        classes      @relation(fields: [id_class], references: [id], onUpdate: Cascade, onDelete: Cascade)
-   year_period    year_period? @relation(fields: [id_year_period], references: [id])
-   violations     violations[]
+  id             Int          @id @default(autoincrement())
+  nis            String
+  id_class       Int          @db.SmallInt
+  created_at     DateTime?    @default(now())
+  updated_at     DateTime?    @updatedAt
+  id_year_period Int          @default(1) @db.SmallInt
+  student        students     @relation(fields: [nis], references: [nis], onDelete: Cascade, map: "detail_students_ibfk_1")
+  classes        classes      @relation(fields: [id_class], references: [id], onDelete: Cascade)
+  year_period    year_period  @relation(fields: [id_year_period], references: [id])
+  violations     violations[]
 
-   @@unique([nis, id_year_period], map: "unique_student_year")
-   @@index([id_class], map: "detail_students_id_class_foreign")
-   @@index([id_year_period], map: "detail_students_year_period_foreign")
+  @@unique([nis, id_year_period], map: "unique_student_year")
+  @@index([id_class], map: "detail_students_id_class_foreign")
+  @@index([id_year_period], map: "detail_students_year_period_foreign")
 }
 
 model failed_jobs {
-   id         Int      @id @default(autoincrement())
-   uuid       String   @unique(map: "failed_jobs_uuid_unique") @db.VarChar(255)
-   connection String   @db.Text
-   queue      String   @db.Text
-   payload    String   @db.Text
-   exception  String   @db.Text
-   failed_at  DateTime @default(now()) @db.Timestamp(0)
+  id         Int      @id @default(autoincrement())
+  uuid       String   @unique(map: "failed_jobs_uuid_unique") @db.VarChar(255)
+  connection String
+  queue      String
+  payload    String
+  exception  String
+  failed_at  DateTime @default(now()) @db.Timestamp(0)
 }
 
 model job_batches {
-   id             String  @id @db.VarChar(255)
-   name           String  @db.VarChar(255)
-   total_jobs     Int
-   pending_jobs   Int
-   failed_jobs    Int
-   failed_job_ids String  @db.Text
-   options        String? @db.Text
-   cancelled_at   Int?
-   created_at     Int
-   finished_at    Int?
+  id             String  @id @db.VarChar(255)
+  name           String  @db.VarChar(255)
+  total_jobs     Int
+  pending_jobs   Int
+  failed_jobs    Int
+  failed_job_ids String
+  options        String?
+  cancelled_at   Int?
+  created_at     Int
+  finished_at    Int?
 }
 
 model jobs {
-   id           Int    @id @default(autoincrement())
-   queue        String @db.VarChar(255)
-   payload      String @db.Text
-   attempts     Int    @db.SmallInt
-   reserved_at  Int?
-   available_at Int
-   created_at   Int
+  id           Int    @id @default(autoincrement())
+  queue        String @db.VarChar(255)
+  payload      String
+  attempts     Int    @db.SmallInt
+  reserved_at  Int?
+  available_at Int
+  created_at   Int
 
-   @@index([queue], map: "jobs_queue_index")
+  @@index([queue], map: "jobs_queue_index")
 }
 
 model password_reset_tokens {
-   email      String    @id @db.VarChar(255)
-   token      String    @db.VarChar(255)
-   created_at DateTime? @db.Timestamp(0)
+  email      String    @id @db.VarChar(255)
+  token      String    @db.VarChar(255)
+  created_at DateTime? @db.Timestamp(0)
 }
 
 model personal_access_tokens {
-   id             Int       @id @default(autoincrement())
-   tokenable_type String    @db.VarChar(255)
-   tokenable_id   Int
-   name           String    @db.VarChar(255)
-   token          String    @unique(map: "personal_access_tokens_token_unique") @db.VarChar(64)
-   abilities      String?   @db.Text
-   last_used_at   DateTime? @db.Timestamp(0)
-   expires_at     DateTime? @db.Timestamp(0)
-   created_at     DateTime? @db.Timestamp(0)
-   updated_at     DateTime? @db.Timestamp(0)
+  id             Int       @id @default(autoincrement())
+  tokenable_type String    @db.VarChar(255)
+  tokenable_id   Int
+  name           String    @db.VarChar(255)
+  token          String    @unique(map: "personal_access_tokens_token_unique") @db.VarChar(64)
+  abilities      String?
+  last_used_at   DateTime? @db.Timestamp(0)
+  expires_at     DateTime? @db.Timestamp(0)
+  created_at     DateTime? @db.Timestamp(0)
+  updated_at     DateTime? @db.Timestamp(0)
 
-   @@index([tokenable_type, tokenable_id], map: "personal_access_tokens_tokenable_type_tokenable_id_index")
+  @@index([tokenable_type, tokenable_id], map: "personal_access_tokens_tokenable_type_tokenable_id_index")
 }
 
 model sessions {
-   id            String  @id @db.VarChar(255)
-   user_id       Int?
-   ip_address    String? @db.VarChar(45)
-   user_agent    String? @db.Text
-   payload       String  @db.Text
-   last_activity Int
+  id            String  @id @db.VarChar(255)
+  user_id       Int?
+  ip_address    String? @db.VarChar(45)
+  user_agent    String?
+  payload       String
+  last_activity Int
 
-   @@index([last_activity], map: "sessions_last_activity_index")
-   @@index([user_id], map: "sessions_user_id_index")
+  @@index([last_activity], map: "sessions_last_activity_index")
+  @@index([user_id], map: "sessions_user_id_index")
 }
 
 model students {
-   nis             String            @id
-   name            String            @db.VarChar(100)
-   point           Int               @default(0)
-   created_at      DateTime?         @default(now()) @db.Timestamp(0)
-   updated_at      DateTime?         @default(now()) @db.Timestamp(0)
-   detail_students detail_students[]
-   violations      violations[]
+  nis             String            @id
+  name            String            @db.VarChar(100)
+  point           Int               @default(0)
+  created_at      DateTime?         @default(now()) @db.Timestamp(0)
+  updated_at      DateTime?         @default(now()) @db.Timestamp(0)
+  detail_students detail_students[]
+  violations      violations[]
 }
 
 model users {
-   id             Int          @id @default(autoincrement())
-   fullname       String       @default("nama default")
-   username       String       @unique(map: "username") @db.VarChar(255)
-   password       String       @db.VarChar(255)
-   role           users_role   @default(kesiswaan)
-   api_token      String?      @unique(map: "api_token") @db.VarChar(255)
-   remember_token String?      @db.VarChar(255)
-   created_at     DateTime?    @default(now()) @db.Timestamp(0)
-   updated_at     DateTime?    @default(now()) @db.Timestamp(0)
-   violations     violations[]
+  id             Int          @id @default(autoincrement())
+  username       String       @unique(map: "username") @db.VarChar(255)
+  password       String       @db.VarChar(255)
+  role           users_role   @default(kesiswaan)
+  api_token      String?      @unique(map: "api_token") @db.VarChar(255)
+  remember_token String?      @db.VarChar(255)
+  created_at     DateTime?    @default(now()) @db.Timestamp(0)
+  updated_at     DateTime?    @default(now()) @db.Timestamp(0)
+  fullname       String       @default("nama default")
+  violations     violations[]
 }
 
 model violation_categories {
-   id         Int       @id @default(autoincrement())
-   created_at DateTime? @db.Timestamp(0)
-   updated_at DateTime? @db.Timestamp(0)
+  id         Int       @id @default(autoincrement())
+  created_at DateTime? @db.Timestamp(0)
+  updated_at DateTime? @db.Timestamp(0)
 }
 
 model violation_category {
-   id             Int              @id @default(autoincrement()) @db.SmallInt
-   name           String           @db.VarChar(25)
-   violation_type violation_type[]
+  id             Int              @id @default(autoincrement()) @db.SmallInt
+  name           String           @db.VarChar(25)
+  violation_type violation_type[]
 }
 
 model violation_type {
-   id                 Int                @id @default(autoincrement()) @db.SmallInt
-   name               String             @db.VarChar(100)
-   point              Int                @db.SmallInt
-   punishment         String             @db.VarChar(50)
-   category_id        Int                @db.SmallInt
-   violation_category violation_category @relation(fields: [category_id], references: [id], onUpdate: Restrict, map: "violation_type_ibfk_1")
-   violations         violations[]
+  id                 Int                @id @default(autoincrement()) @db.SmallInt
+  name               String             @db.VarChar(100)
+  point              Int                @db.SmallInt
+  punishment         String             @db.VarChar(50)
+  category_id        Int                @db.SmallInt
+  violation_category violation_category @relation(fields: [category_id], references: [id], onUpdate: Restrict, map: "violation_type_ibfk_1")
+  violations         violations[]
 
-   @@index([category_id], map: "category_id")
+  @@index([category_id], map: "category_id")
 }
 
 model violations {
-   id              Int             @id @default(autoincrement())
-   student_id      Int
-   nis             String
-   type_id         Int             @db.SmallInt
-   teacher_id      Int
-   implemented     Boolean
-   created_at      DateTime?       @default(now()) @db.Timestamp(0)
-   updated_at      DateTime?       @default(now()) @updatedAt @db.Timestamp(0)
-   detail_students detail_students @relation(fields: [student_id], references: [id], onUpdate: Cascade, onDelete: Cascade, map: "violations_ibfk_1")
-   violation_type  violation_type  @relation(fields: [type_id], references: [id], onUpdate: Restrict, map: "violations_ibfk_2")
-   users           users           @relation(fields: [teacher_id], references: [id], onUpdate: Restrict, map: "violations_ibfk_3")
-   student         students        @relation(fields: [nis], references: [nis], onUpdate: Cascade, onDelete: Cascade)
+  id              Int             @id @default(autoincrement())
+  student_id      Int
+  type_id         Int             @db.SmallInt
+  teacher_id      Int
+  implemented     Boolean
+  created_at      DateTime?       @default(now()) @db.Timestamp(0)
+  updated_at      DateTime?       @default(now()) @updatedAt @db.Timestamp(0)
+  description     String          @default("") @db.Text
+  nis             String
+  detail_students detail_students @relation(fields: [student_id], references: [id], onDelete: Cascade, map: "violations_ibfk_1")
+  violation_type  violation_type  @relation(fields: [type_id], references: [id], onUpdate: Restrict, map: "violations_ibfk_2")
+  users           users           @relation(fields: [teacher_id], references: [id], onUpdate: Restrict, map: "violations_ibfk_3")
+  student         students        @relation(fields: [nis], references: [nis], onDelete: Cascade)
 
-   @@index([nis], map: "student_nis")
-   @@index([student_id], map: "student_id")
-   @@index([teacher_id], map: "teacher_id")
-   @@index([type_id], map: "type_id")
+  @@index([nis], map: "student_nis")
+  @@index([student_id], map: "student_id")
+  @@index([teacher_id], map: "teacher_id")
+  @@index([type_id], map: "type_id")
 }
 
 model year_period {
-   id              Int               @id @default(autoincrement()) @db.SmallInt
-   start_year      Int               @default(2025)
-   end_year        Int               @default(2026)
-   display_name    String            @unique @default("Tahun Ajaran 2025/2026")
-   detail_students detail_students[]
+  id              Int               @id @default(autoincrement()) @db.SmallInt
+  start_year      Int               @default(2025)
+  end_year        Int               @default(2026)
+  display_name    String            @unique @default("Tahun Ajaran 2025/2026")
+  detail_students detail_students[]
 }
 
 enum users_role {
-   admin
-   kesiswaan
+  admin
+  kesiswaan
+  kedisiplinan
 }
