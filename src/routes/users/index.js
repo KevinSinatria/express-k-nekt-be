@@ -13,12 +13,12 @@ import {
 const router = Router();
 
 router.get("/", getAllUsers);
+router.put("/profile", updateProfile);
+router.put("/reset-password", updatePassword);
+router.get("/me", me);
 router.get("/:id", getUserById);
 router.post("/", createUser);
 router.put("/:id", updateUser);
 router.delete("/:id", deleteUser);
-router.put("/reset-password", updatePassword);
-router.put("/profile", updateProfile);
-router.get("/me", me);
 
 export default router;
