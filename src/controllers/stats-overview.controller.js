@@ -21,7 +21,7 @@ export const getStatsOverview = async (req, res) => {
     });
     const totalPoints = violationsWithPoints.reduce(
       (acc, v) => acc + v.violation_type.point,
-      0
+      0,
     );
     const averagePoints =
       totalViolations > 0 ? totalPoints / totalViolations : 0;
@@ -63,7 +63,7 @@ export const getStatsOverview = async (req, res) => {
     // Tingkat kedisiplinan sekolah (0 - 100%)
     const maxPoint = 100; // asumsi ambang batas poin maksimal per siswa
     const disciplineRate = Number(
-      (100 - (totalPoints / (totalStudents * maxPoint)) * 100).toFixed(2)
+      (100 - (totalPoints / (totalStudents * maxPoint)) * 100).toFixed(2),
     );
 
     // ========== 📊 CHARTS ==========
@@ -97,11 +97,18 @@ export const getStatsOverview = async (req, res) => {
         else acc.push(current);
         return acc;
       },
-      []
+      [],
     );
 
     // Top siswa dengan poin tertinggi
     const topStudentByPoints = await prisma.students.findMany({
+      where: {
+        detail_students: {
+          some: {
+            id_year_period: Number(year_period_id),
+          },
+        },
+      },
       select: {
         name: true,
         nis: true,
@@ -175,7 +182,7 @@ export const getStatsOverview = async (req, res) => {
             name: student.name,
             nis: student.nis,
             point: student.point,
-            class: student.detail_students[0].classes.class,
+            class: student.detail_students[0]?.classes?.class ?? null,
           })),
           topClasses,
           violationsByMonthData,
