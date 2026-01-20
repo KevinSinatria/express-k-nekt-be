@@ -20,29 +20,6 @@ model cache_locks {
   expiration Int
 }
 
-model classes {
-  id              Int               @id @default(autoincrement())
-  class           String            @unique(map: "classes_class_unique") @db.VarChar(50)
-  detail_students detail_students[]
-}
-
-model detail_students {
-  id             Int          @id @default(autoincrement())
-  nis            String
-  id_class       Int          @db.SmallInt
-  created_at     DateTime?    @default(now())
-  updated_at     DateTime?    @updatedAt
-  id_year_period Int          @default(1) @db.SmallInt
-  student        students     @relation(fields: [nis], references: [nis], onDelete: Cascade, map: "detail_students_ibfk_1")
-  classes        classes      @relation(fields: [id_class], references: [id], onDelete: Cascade)
-  year_period    year_period  @relation(fields: [id_year_period], references: [id])
-  violations     violations[]
-
-  @@unique([nis, id_year_period], map: "unique_student_year")
-  @@index([id_class], map: "detail_students_id_class_foreign")
-  @@index([id_year_period], map: "detail_students_year_period_foreign")
-}
-
 model failed_jobs {
   id         Int      @id @default(autoincrement())
   uuid       String   @unique(map: "failed_jobs_uuid_unique") @db.VarChar(255)
@@ -111,27 +88,60 @@ model sessions {
   @@index([user_id], map: "sessions_user_id_index")
 }
 
+model classes {
+  id                 Int                   @id @default(autoincrement())
+  class              String                @unique(map: "classes_class_unique") @db.VarChar(50)
+  detail_students    detail_students[]
+  teacherAssignments teacher_assignments[]
+}
+
+model detail_students {
+  id             Int          @id @default(autoincrement())
+  nis            String
+  id_class       Int          @db.SmallInt
+  created_at     DateTime?    @default(now())
+  updated_at     DateTime?    @updatedAt
+  id_year_period Int          @default(1) @db.SmallInt
+  student        students     @relation(fields: [nis], references: [nis], onDelete: Cascade, map: "detail_students_ibfk_1")
+  classes        classes      @relation(fields: [id_class], references: [id], onDelete: Cascade)
+  year_period    year_period  @relation(fields: [id_year_period], references: [id])
+  violations     violations[]
+
+  @@unique([nis, id_year_period], map: "unique_student_year")
+  @@index([id_class], map: "detail_students_id_class_foreign")
+  @@index([id_year_period], map: "detail_students_year_period_foreign")
+}
+
 model students {
-  nis             String            @id
-  name            String            @db.VarChar(100)
-  point           Int               @default(0)
-  created_at      DateTime?         @default(now()) @db.Timestamp(0)
-  updated_at      DateTime?         @default(now()) @db.Timestamp(0)
-  detail_students detail_students[]
-  violations      violations[]
+  nis                  String                   @id
+  name                 String                   @db.VarChar(100)
+  point                Int                      @default(0)
+  created_at           DateTime?                @default(now()) @db.Timestamp(0)
+  updated_at           DateTime?                @default(now()) @db.Timestamp(0)
+  detail_students      detail_students[]
+  studentPermits       student_permits[]
+  violations           violations[]
+  studentPermitDetails student_permit_details[]
 }
 
 model users {
-  id             Int          @id @default(autoincrement())
-  username       String       @unique(map: "username") @db.VarChar(255)
-  password       String       @db.VarChar(255)
-  role           users_role   @default(kesiswaan)
-  api_token      String?      @unique(map: "api_token") @db.VarChar(255)
-  remember_token String?      @db.VarChar(255)
-  created_at     DateTime?    @default(now()) @db.Timestamp(0)
-  updated_at     DateTime?    @default(now()) @db.Timestamp(0)
-  fullname       String       @default("nama default")
-  violations     violations[]
+  id                     Int                   @id @default(autoincrement())
+  username               String                @unique(map: "username") @db.VarChar(255)
+  password               String                @db.VarChar(255)
+  api_token              String?               @unique(map: "api_token") @db.VarChar(255)
+  remember_token         String?               @db.VarChar(255)
+  created_at             DateTime?             @default(now())
+  updated_at             DateTime?             @updatedAt
+  fullname               String                @default("nama default")
+  nip                    String?
+  piketSchedules         PiketSchedule[]
+  mapel_permits_approval student_permits[]     @relation("MapelUserApproval")
+  piket_permits_created  student_permits[]     @relation("PiketUserPermits")
+  teacher_assignments    teacher_assignments[] @relation("TeacherAssignmentOwner")
+  user_roles             user_role[]
+  violations             violations[]
+
+  @@map("users")
 }
 
 model violation_categories {
@@ -166,8 +176,8 @@ model violations {
   implemented     Boolean
   created_at      DateTime?       @default(now()) @db.Timestamp(0)
   updated_at      DateTime?       @default(now()) @updatedAt @db.Timestamp(0)
-  description     String          @default("") @db.Text
   nis             String
+  description     String          @default("")
   detail_students detail_students @relation(fields: [student_id], references: [id], onDelete: Cascade, map: "violations_ibfk_1")
   violation_type  violation_type  @relation(fields: [type_id], references: [id], onUpdate: Restrict, map: "violations_ibfk_2")
   users           users           @relation(fields: [teacher_id], references: [id], onUpdate: Restrict, map: "violations_ibfk_3")
@@ -179,6 +189,68 @@ model violations {
   @@index([type_id], map: "type_id")
 }
 
+model subjects {
+  id                  Int                   @id @default(autoincrement())
+  name                String                @db.VarChar(255)
+  created_at          DateTime              @default(now()) @db.Timestamp(0)
+  updated_at          DateTime              @default(now()) @db.Timestamp(0)
+  teacher_assignments teacher_assignments[]
+}
+
+model PiketSchedule {
+  id              Int   @id @default(autoincrement())
+  teacher_user_id Int
+  day_of_week     Int
+  teacher         users @relation(fields: [teacher_user_id], references: [id])
+
+  @@map("piket_schedules")
+}
+
+model teacher_assignments {
+  id                 Int       @id @default(autoincrement())
+  teacher_user_id    Int
+  class_id           Int
+  subject_id         Int
+  assignment_details String
+  reason             String
+  due_date           DateTime?
+  created_at         DateTime  @default(now()) @db.Timestamp(0)
+  updated_at         DateTime  @updatedAt @db.Timestamp(0)
+  class              classes   @relation(fields: [class_id], references: [id], onDelete: Cascade)
+  subject            subjects  @relation(fields: [subject_id], references: [id], onDelete: Cascade)
+  teacher            users     @relation("TeacherAssignmentOwner", fields: [teacher_user_id], references: [id], onDelete: Cascade)
+
+  @@map("teacher_assignments")
+}
+
+model student_permits {
+  id                     Int                      @id @default(autoincrement())
+  reason                 String
+  hours_start            Int
+  hours_end              Int?
+  status                 student_permit_status    @default(PENDING_MAPEL)
+  created_at             DateTime                 @default(now())
+  updated_at             DateTime                 @updatedAt
+  piket_user_id          Int
+  mapel_user_id          Int
+  mapel_user             users                    @relation("MapelUserApproval", fields: [mapel_user_id], references: [id])
+  piket_user             users                    @relation("PiketUserPermits", fields: [piket_user_id], references: [id])
+  student_permit_details student_permit_details[]
+  students               students?                @relation(fields: [studentsNis], references: [nis])
+  studentsNis            String?
+
+  @@map("student_permits")
+}
+
+model student_permit_details {
+  id                Int    @id @default(autoincrement())
+  student_permit_id Int
+  student_nis       String
+
+  student_permit student_permits @relation(fields: [student_permit_id], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  student        students        @relation(fields: [student_nis], references: [nis])
+}
+
 model year_period {
   id              Int               @id @default(autoincrement()) @db.SmallInt
   start_year      Int               @default(2025)
@@ -187,8 +259,30 @@ model year_period {
   detail_students detail_students[]
 }
 
+model roles {
+  id         Int         @id @default(autoincrement())
+  name       String      @db.VarChar(255)
+  user_roles user_role[]
+}
+
+model user_role {
+  id      Int   @id @default(autoincrement())
+  user_id Int
+  role_id Int
+  role    roles @relation(fields: [role_id], references: [id], onDelete: Cascade)
+  user    users @relation(fields: [user_id], references: [id], onDelete: Cascade)
+}
+
 enum users_role {
   admin
   kesiswaan
   kedisiplinan
+}
+
+enum student_permit_status {
+  PENDING_MAPEL
+  PENDING_PIKET
+  APPROVED
+  REJECTED
+  CANCELED
 }
