@@ -9,6 +9,7 @@ import violationCategoriesRoute from "./violation-categories/index.js";
 import yearPeriodsRoute from "./year-periods/index.js";
 import usersRoute from "./users/index.js";
 import { authenticate } from "../middlewares/auth.middleware.js";
+import userRolesRoute from "./user-roles/index.js";
 
 const router = express.Router();
 
@@ -21,5 +22,6 @@ router.use("/stats-overview", authenticate, statsOverviewRoutes);
 router.use("/violation-categories", authenticate, violationCategoriesRoute);
 router.use("/users", authenticate, usersRoute);
 router.use("/year-periods", yearPeriodsRoute);
+router.use("/user-roles", authenticate, userRolesRoute);
 
 export default router;

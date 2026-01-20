@@ -223,7 +223,7 @@ export const importStudentsFromExcel = async (req, res) => {
 
     // --- Langkah Validasi Kelas yang Efisien ---
     const classNamesFromExcel = [
-      ...new Set(dataFromExcel.map((row) => row["Kelas"]))
+      ...new Set(dataFromExcel.map((row) => row["Kelas"])),
     ];
 
     const classesInDb = await prisma.classes.findMany({
@@ -402,14 +402,44 @@ export const getStudentByNIS = async (req, res) => {
       });
     }
 
+    const auditPointData = await prisma.violations.findMany({
+      where: {
+        nis,
+      },
+      select: {
+        violation_type: {
+          select: {
+            name: true,
+            point: true,
+            punishment: true,
+            violation_category: {
+              select: {
+                name: true,
+              },
+            },
+          },
+        },
+        implemented: true,
+        created_at: true,
+      },
+    });
+
     const formattedStudentData = {
-      id: studentData.id,
+      id: studentData.student.id,
       nis: studentData.nis,
       name: studentData.student.name,
       point: studentData.student.point,
       class: studentData.classes.class,
       class_id: studentData.classes.id,
       year_period: studentData.year_period.display_name,
+      audit_point: auditPointData.map((audit) => ({
+        violation_name: audit.violation_type.name,
+        violation_point: audit.violation_type.point,
+        punishment: audit.violation_type.punishment,
+        violation_category: audit.violation_type.violation_category.name,
+        implemented: audit.implemented,
+        created_at: audit.created_at,
+      })),
     };
 
     res.status(200).json({

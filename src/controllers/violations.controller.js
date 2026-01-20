@@ -130,7 +130,7 @@ export const getAllViolations = async (req, res) => {
         created_at: true,
         updated_at: true,
       },
-      10
+      10,
     );
 
     const formattedViolationsData = violationsData.data.map((violation) => ({
@@ -162,7 +162,14 @@ export const getAllViolations = async (req, res) => {
 
 export const getAllViolationsForExport = async (req, res) => {
   try {
+    const { year_id } = req.query;
+
     const violations = await prisma.violations.findMany({
+      where: {
+        detail_students: {
+          id_year_period: { equals: Number(year_id) },
+        },
+      },
       select: {
         id: true,
         detail_students: {

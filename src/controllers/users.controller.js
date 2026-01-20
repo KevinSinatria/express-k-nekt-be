@@ -8,7 +8,6 @@ export const getAllUsers = async (req, res) => {
         id: true,
         username: true,
         password: true,
-        role: true,
         created_at: true,
         updated_at: true,
       },
@@ -39,7 +38,6 @@ export const getUserById = async (req, res) => {
         id: true,
         password: true,
         username: true,
-        role: true,
         created_at: true,
         updated_at: true,
       },
@@ -70,7 +68,7 @@ export const getUserById = async (req, res) => {
 };
 
 export const createUser = async (req, res) => {
-  const { username, password, role } = req.body;
+  const { username, password } = req.body;
   try {
     const existingUser = await prisma.users.findFirst({
       where: {
@@ -94,7 +92,6 @@ export const createUser = async (req, res) => {
       data: {
         username: username,
         password: hashedPassword,
-        role: role,
       },
     });
 
@@ -102,7 +99,6 @@ export const createUser = async (req, res) => {
       id: newUser.id,
       username: newUser.username,
       password: newUser.password,
-      role: newUser.role,
     };
 
     res.status(201).json({
@@ -123,7 +119,7 @@ export const createUser = async (req, res) => {
 
 export const updateUser = async (req, res) => {
   const { id } = req.params;
-  const { username, password, role } = req.body;
+  const { username, password } = req.body;
   try {
     const existingUser = await prisma.users.findUnique({
       where: { id: parseInt(id) },
@@ -144,9 +140,6 @@ export const updateUser = async (req, res) => {
     if (password) {
       updateData.password = await bcrypt.hash(password, 10);
     }
-    if (role) {
-      updateData.role = role;
-    }
 
     const updateUser = await prisma.users.update({
       where: { id: parseInt(id) },
@@ -155,7 +148,6 @@ export const updateUser = async (req, res) => {
         id: true,
         username: true,
         password: true,
-        role: true,
         created_at: true,
         updated_at: true,
       },
@@ -198,7 +190,6 @@ export const deleteUser = async (req, res) => {
         id: true,
         username: true,
         password: true,
-        role: true,
       },
     });
 
@@ -291,6 +282,7 @@ export const updateProfile = async (req, res) => {
       code: 200,
     });
   } catch (error) {
+    console.error(error);
     res.status(500).json({
       success: false,
       message: "Failed to update profile",
