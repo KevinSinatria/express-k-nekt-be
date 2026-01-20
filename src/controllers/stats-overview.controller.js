@@ -7,14 +7,41 @@ export const getStatsOverview = async (req, res) => {
     // ========== 🧾 OVERVIEW CARDS ==========
     const [totalStudents, totalClasses, totalViolations, unimplementViolation] =
       await Promise.all([
-        prisma.students.count(),
-        prisma.classes.count(),
-        prisma.violations.count(),
+        prisma.students.count({
+          where: {
+            detail_students: {
+              some: {
+                id_year_period: Number(year_period_id),
+              },
+            },
+          },
+        }),
+        prisma.classes.count({
+          where: {
+            detail_students: {
+              some: {
+                id_year_period: Number(year_period_id),
+              },
+            },
+          },
+        }),
+        prisma.violations.count({
+          where: {
+            detail_students: {
+              id_year_period: Number(year_period_id),
+            },
+          },
+        }),
         prisma.violations.count({ where: { implemented: false } }),
       ]);
 
     // Total poin pelanggaran
     const violationsWithPoints = await prisma.violations.findMany({
+      where: {
+        detail_students: {
+          id_year_period: Number(year_period_id),
+        },
+      },
       select: {
         violation_type: { select: { point: true } },
       },
@@ -28,7 +55,12 @@ export const getStatsOverview = async (req, res) => {
 
     // Pelanggaran berat (misal poin > 10)
     const seriousViolations = await prisma.violations.count({
-      where: { violation_type: { point: { gt: 10 } } },
+      where: {
+        detail_students: {
+          id_year_period: Number(year_period_id),
+        },
+        violation_type: { point: { gt: 10 } },
+      },
     });
 
     // Guru pelapor aktif bulan ini
@@ -45,6 +77,11 @@ export const getStatsOverview = async (req, res) => {
 
     // Siswa tanpa pelanggaran
     const studentsWithViolation = await prisma.violations.findMany({
+      where: {
+        detail_students: {
+          id_year_period: Number(year_period_id),
+        },
+      },
       distinct: ["nis"],
       select: { nis: true },
     });
@@ -70,6 +107,11 @@ export const getStatsOverview = async (req, res) => {
     // Pelanggaran berdasarkan kategori
     const violationsGroupedByType = await prisma.violations.groupBy({
       by: ["type_id"],
+      where: {
+        detail_students: {
+          id_year_period: Number(year_period_id),
+        },
+      },
       _count: { _all: true },
     });
     const typesAndCategories = await prisma.violation_type.findMany({
@@ -134,6 +176,7 @@ export const getStatsOverview = async (req, res) => {
 			FROM violations v
 			JOIN detail_students ds ON ds.id = v.student_id
 			JOIN classes c ON c.id = ds.id_class
+      WHERE ds.id_year_period = ${Number(year_period_id)}::smallint
 			GROUP BY c.class
 			ORDER BY count DESC
 			LIMIT 5;
@@ -146,9 +189,11 @@ export const getStatsOverview = async (req, res) => {
     // Pelanggaran per bulan (trending)
     const violationsByMonth = await prisma.$queryRaw(Prisma.sql`
 			SELECT
-				TO_CHAR(created_at, 'YYYY-MM') as month,
+				TO_CHAR(v.created_at, 'YYYY-MM') as month,
 				COUNT(*) as count
-			FROM violations
+			FROM violations v
+      JOIN detail_students ds ON v.student_id = ds.id
+      WHERE ds.id_year_period = ${Number(year_period_id)}::smallint
 			GROUP BY month
 			ORDER BY month;
 		`);
