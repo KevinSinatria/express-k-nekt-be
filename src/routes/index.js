@@ -1,5 +1,6 @@
 import express from "express";
 import authRoutes from "./auth/index.js";
+import keepAliveRoutes from "./keep-alive/index.js";
 import violationsRoutes from "./violations/index.js";
 import studentRoutes from "./students/index.js";
 import classesRoutes from "./classes/index.js";
@@ -13,6 +14,7 @@ import userRolesRoute from "./user-roles/index.js";
 
 const router = express.Router();
 
+router.use("/keep-alive", keepAliveRoutes);
 router.use("/auth", authRoutes);
 router.use("/violations", authenticate, violationsRoutes);
 router.use("/students", authenticate, studentRoutes);
